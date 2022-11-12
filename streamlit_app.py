@@ -17,7 +17,7 @@ def use_network(photo, mask):
 
 def find_top(predict_list, top_size):
     ls = [(i, predict_list[i]) for i in range(len(predict_list))]
-    return heapq.nlargest(top_size, ls)
+    return heapq.nlargest(top_size, ls, key=lambda item: item[1])
 
 
 # top_ls - list of tuples
