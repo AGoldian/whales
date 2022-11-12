@@ -28,7 +28,7 @@ def convert_to_prob(top_ls):
     probs = [math.exp(elem[1]) for elem in top_ls]
     sigma = sum(probs)
 
-    return [(top_ls[i][0], probs[i] / sigma) for i in range(len(probs))]
+    return [(top_ls[i][0] + 1, probs[i] / sigma) for i in range(len(probs))]
 
 
 def main():
@@ -68,7 +68,7 @@ def main():
 
     # convert to probability
     top_ls = convert_to_prob(top_ls)
-    st.table(pandas.DataFrame(top_ls, columns=['Тип', 'Уверенность']))
+    st.table(pandas.DataFrame(top_ls, columns=['Id', 'Probability']))
 
 
 if __name__ == '__main__':
