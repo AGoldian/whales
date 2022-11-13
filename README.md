@@ -1,5 +1,7 @@
 # **Indentification of bowhead whales**
 
+Модели: https://drive.google.com/drive/folders/1PgaDAW-YwJW4xzzq41F0_2-bdn18jCbd
+
 Реализовано веб-приложения для индетификации гренландских китов. Для отслеживания миграции и популяции семейства.
 
 ### **Установка и запуск**
