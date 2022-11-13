@@ -31,6 +31,11 @@ def convert_to_prob(top_ls):
     return [(top_ls[i][0] + 1, probs[i] / sigma) for i in range(len(probs))]
 
 
+# add indices
+def add_first_col(ls):
+    return [(i + 1, *ls[i]) for i in range(len(ls))]
+
+
 def main():
     st.title("Цифровой прорыв. Команда \"Юзеры\"")
     file_photo = st.file_uploader("Загрузите фото кита:", type=['jpg'])
@@ -68,7 +73,20 @@ def main():
 
     # convert to probability
     top_ls = convert_to_prob(top_ls)
-    st.table(pandas.DataFrame(top_ls, columns=['Id', 'Probability']))
+    top_ls = add_first_col(top_ls)
+
+    # CSS to inject contained in a string
+    hide_table_row_index = """
+                <style>
+                thead tr th:first-child {display:none}
+                tbody th {display:none}
+                </style>
+                """
+
+    # Inject CSS with Markdown
+    st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
+    st.table(pandas.DataFrame(top_ls, columns=['Number', 'Id', 'Probability']))
 
 
 if __name__ == '__main__':
