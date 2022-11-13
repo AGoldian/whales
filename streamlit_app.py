@@ -5,14 +5,24 @@ import pandas
 import streamlit as st
 from PIL import Image
 
+MODEL_PATH = "./6_0.4796_0.3058.pth"
 
 @st.cache(suppress_st_warning=True)
 def load_data():
     return Image.open('./resources/defaultPhoto.jpg'), Image.open('./resources/defaultMask.png')
 
-
-def use_network(photo, mask):
-    return [1.3, 5.1, 2.2, 0.7, 1.1]
+def use_network(img, model):
+    preprocessing_fn = smp.encoders.get_preprocessing_fn('resnet50', 'imagenet')
+    # resize 256 256
+    img = cv2.resize(img, (256, 256))
+    trf = albu.Compose([albu.Lambda(image=preprocessing_fn)])
+    img = trf(image=img)['image']
+    img = img.transpose(2, 0, 1).astype('float32')
+    x_tensor = torch.from_numpy(img).to("cuda").unsqueeze(0)
+    out = model(x_tensor)
+    # top_2 = torch.topk(out, 5)
+    # top_2_arg = top_2.indices.cpu().numpy()[0]
+    return out[0][1:]
 
 
 def find_top(predict_list, top_size):
@@ -29,6 +39,11 @@ def convert_to_prob(top_ls):
     sigma = sum(probs)
 
     return [(top_ls[i][0] + 1, probs[i] / sigma) for i in range(len(probs))]
+
+
+# add indices
+def add_first_col(ls):
+    return [(i + 1, *ls[i]) for i in range(len(ls))]
 
 
 def main():
@@ -58,17 +73,31 @@ def main():
 
         photo_with_mask = Image.composite(photo, Image.new("RGB", photo.size, (255, 255, 255)), mask)
         st.image(photo_with_mask)
-
+        
+    photo_with_mask = Image.composite(photo, Image.new("RGB", photo.size, (255, 255, 255)), mask)
     photo_arr, mask_arr = np.array(photo), np.array(mask)
+    predict_list = use_network(np.array(photo_with_mask), model)
 
-    predict_list = use_network(photo_arr, mask_arr)
 
     # find top 5 with indexes
     top_ls = find_top(predict_list, top_size)
 
     # convert to probability
     top_ls = convert_to_prob(top_ls)
-    st.table(pandas.DataFrame(top_ls, columns=['Id', 'Probability']))
+    top_ls = add_first_col(top_ls)
+
+    # CSS to inject contained in a string
+    hide_table_row_index = """
+                <style>
+                thead tr th:first-child {display:none}
+                tbody th {display:none}
+                </style>
+                """
+
+    # Inject CSS with Markdown
+    st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
+    st.table(pandas.DataFrame(top_ls, columns=['Number', 'Id', 'Probability']))
 
 
 if __name__ == '__main__':
